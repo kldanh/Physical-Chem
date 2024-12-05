@@ -1,0 +1,47 @@
+import sympy as sp
+
+# Define symbols
+x, L = sp.symbols('x L', real=True, positive=True)
+n = sp.symbols('n', integer=True, positive=True)
+
+# Wavefunction for a particle in a 1D box
+psi = sp.sqrt(2 / L) * sp.sin(n * sp.pi * x / L)
+
+# Probability density
+P = psi**2 # unless imaginary numbers present
+
+# Set the box length to 1 nm
+L_value = 1  # in nm
+
+# Function to find the most probable locations
+def most_probable_locations(n_value): #with quantum number n as the parameter
+    # Substitute n and L into P(x)
+    P_n = P.subs({n: n_value, L: L_value})
+    # Solve for critical points where P'(x) = 0
+    crit_points = sp.solveset(sp.diff(P_n, x), x, domain=sp.Interval(0, L_value))
+    # Filter valid critical points in the interval [0, L]
+    crit_points = [pt for pt in crit_points if 0 <= pt.evalf() <= L_value]
+
+    # Evaluate second derivative to confirm maxima
+    max_points = [
+        pt for pt in crit_points
+        if sp.diff(P_n, x, 2).subs(x, pt).evalf() < 0  # Negative second derivative implies a maxima
+    ]
+    return [pt.evalf() for pt in max_points]
+
+# Function to calculate the average location
+def average_location(n_value):
+    # Substitute n and L into P(x)
+    P_n = P.subs({n: n_value, L: L_value})
+    # Compute the expectation value of x: ∫ x * P(x) dx from 0 to L
+    avg_x = sp.integrate(x * P_n, (x, 0, L_value))
+    return avg_x.evalf()
+
+# Results for n=1, 2, 3
+for n_value in [1, 2, 3]:
+    most_prob_locs = most_probable_locations(n_value)
+    avg_loc = average_location(n_value)
+    print(f"n = {n_value}:")
+    print(f"  Most probable location(s): {most_prob_locs} nm")
+    print(f"  Average location: {avg_loc} nm")
+    print()
