@@ -128,3 +128,128 @@ half_max_radii = [r * 100 * a0_value / a0 for r in find_half_max_radius()]  # Co
 print(f"Average Radius: {avg_radius:.2f} pm")
 print(f"Most Probable Radius: {most_probable_radius:.2f} pm")
 print(f"Radii where P(r) = Half of Maximum Value: {half_max_radii} pm")
+
+
+#Question 2: For a 1s orbital in a hydrogen atom, calculate the average radius and the most probable
+  #radius. Don’t forget the correct volume element for your integrals. Then calculate the
+  #radius where the probability is half of what it is at its maxium value.
+
+import sympy as sp
+
+# Define symbols
+r, a0 = sp.symbols('r a0', real=True, positive=True)
+#n = sp.symbols('n', integer=True, positive=True)
+n = 1
+Z = 1 # Atomic number for H
+k = 1 # power of the expectant value 
+#a0 = 0.529 # Bohr radius in angstroms
+
+
+# Radial wavefunction for 1s orbital (in terms of the Bohr radius, a0)
+R_1s = 2 * (Z / a0)**(3/2) * sp.exp(-r / a0)
+
+# Radial probability density (P(r) = 4 * pi * r^2 * |R_1s(r)|^2)
+P_r = R_1s**2 * (4 * sp.pi * r**2)
+
+#Spherical Harmonics for 1s
+Y = sp.sqrt(1 / (4*sp.pi))
+
+#P_r = (r * 1 / sp.sqrt(sp.pi * a0**3) * sp.exp(-r / a0))**2 
+
+# Expectation value of r 
+A = R_1s**2*r**(k+2)
+
+# Calculate the average radius
+def calculate_average_radius():
+    avg_radius = sp.integrate(A, (r, 0, sp.oo))
+    avg_radius = avg_radius.simplify()
+    return avg_radius
+
+# Find the most probable radius (where P'(r) = 0 and P(r) is maximized)
+def find_most_probable_radius():
+    P_r_prime = sp.diff(P_r, r)
+    critical_points = sp.solveset(P_r_prime, r, domain=sp.Interval(0, sp.oo))
+    # Filter real, positive solutions
+    critical_points = [pt.evalf() for pt in critical_points if pt.is_real and pt > 0]
+    if critical_points:
+        most_prob_r = max(critical_points, key=lambda x: P_r.subs(r, x).evalf())
+        return most_prob_r
+    else:
+        return None  # No valid solution found
+
+# Find the radius where P(r) is half of its maximum value
+def find_half_max_radius():
+    r_most_prob = find_most_probable_radius()
+    if r_most_prob is None:
+        return []  # Return empty if no most probable radius is found
+    max_prob = P_r.subs(r, r_most_prob).evalf()
+
+    # Set up the equation P(r) = max_prob / 2
+    half_prob_eq = sp.Eq(P_r, max_prob / 2)
+
+    # Solve for r numerically, using sp.solveset for real solutions in the positive range
+    half_prob_radii = sp.solve(half_prob_eq, r, domain=sp.Interval(0, 10 * a0))  # Assuming a reasonable upper bound
+    half_prob_radii = [pt.evalf() for pt in half_prob_radii if pt.is_real and pt > 0]
+
+    return half_prob_radii
+
+
+# Numerical values
+a0_value = 0.529  # Bohr radius in angstroms
+
+# Compute results
+avg_radius = calculate_average_radius().subs(a0, a0_value).evalf() * 100  # Convert to pm
+most_probable_radius = find_most_probable_radius()
+if most_probable_radius is not None:
+    most_probable_radius = most_probable_radius.subs(a0, a0_value).evalf() * 100  # Convert to pm
+half_max_radii = [r * 100 * a0_value / a0 for r in find_half_max_radius()]  # Convert to pm
+
+# Print results
+print(f"Average Radius: {avg_radius:.2f} pm")
+print(f"Most Probable Radius: {most_probable_radius:.2f} pm")
+print(f"Radii where P(r) = Half of Maximum Value: {half_max_radii} pm")
+
+
+######################
+
+
+# Question 3: What is the average radius for an electron in (1) a 2s orbital in a hydrogen atom (2)
+  #a 2p orbital in a hydrogen atom. Your answers may surprise you. You might think
+  #about why the answers would be different in a many electron atom.
+
+import sympy as sp
+
+# Define symbols
+r, a0 = sp.symbols('r a0', positive=True, real=True)
+Z = 1  # Atomic number for hydrogen atom
+n = 2 # 2s and 2p orbitals
+
+# Radial wavefunctions for 2s and 2p orbitals (normalized for hydrogen atom)
+R_2s = (1 / sp.sqrt(8)) * (Z / a0)**(3/2) * (2 - r * (2 * Z) / (n * a0)) * sp.exp(-r / (2 * a0))
+R_2p = (1 / sp.sqrt(24)) * (Z / a0)**(3/2) * (r * (2 * Z) / (n * a0)) * sp.exp(-r / (2 * a0))
+
+# Radial probability densities
+P_2s = R_2s**2 *  r**2
+P_2p = R_2p**2 * r**2
+
+# Expectation value integrals for <r>
+average_radius_2s = sp.integrate(r * P_2s, (r, 0, sp.oo))
+average_radius_2p = sp.integrate(r * P_2p, (r, 0, sp.oo))
+
+# Bohr radius (a0)
+a0_value = 0.529  # angstroms
+
+# Convert results to picometers (1 angstrom = 100 pm)
+avg_radius_2s_pm = average_radius_2s.subs(a0, a0_value).evalf() * 100
+avg_radius_2p_pm = average_radius_2p.subs(a0, a0_value).evalf() * 100
+
+# Print results
+print(f"Average Radius for 2s Orbital: {avg_radius_2s_pm:.2f} pm")
+print(f"Average Radius for 2p Orbital: {avg_radius_2p_pm:.2f} pm")
+
+
+
+
+
+
+
